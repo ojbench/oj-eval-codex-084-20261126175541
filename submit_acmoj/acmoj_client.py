@@ -112,7 +112,9 @@ def main():
     # Git submission sub-command
     submit_parser = subparsers.add_parser("submit", help="Submit Git repository")
     submit_parser.add_argument("--problem-id", type=int, required=True, help="Problem ID")
-    submit_parser.add_argument("--git-url", type=str, required=True, help="Git repository URL")
+    source_group = submit_parser.add_mutually_exclusive_group(required=True)
+    source_group.add_argument("--git-url", type=str, help="Git repository URL")
+    source_group.add_argument("--source-file", type=str, help="Submit source text for header-based judges")
 
     # Sub-command for checking submission status
     status_parser = subparsers.add_parser("status", help="Check submission status")
@@ -131,7 +133,12 @@ def main():
     client = ACMOJClient(args.token)
 
     if args.command == "submit":
-        result = client.submit_git(args.problem_id, args.git_url)
+        if args.source_file:
+            with open(args.source_file, encoding="utf-8") as source:
+                code = source.read()
+            result = client.submit_git(args.problem_id, code)
+        else:
+            result = client.submit_git(args.problem_id, args.git_url)
     elif args.command == "status":
         result = client.get_submission_detail(args.submission_id)
     elif args.command == "abort":
